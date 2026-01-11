@@ -3,9 +3,13 @@ if not cloneref then
     getgenv().cloneref = function(obj) return obj end
 end
 
--- Premium Key Configuration
+-- Main Key Configuration
 local CORRECT_KEY = "NEROSCRIPTS2026"
 local KEY_LINK = "http://pastepeso.net/NeroScriptKey"
+
+-- Dupe Key Configuration
+local DUPE_CORRECT_KEY = "NERODUPEKEY123"
+local DUPE_KEY_LINK = "https://pastepeso.net/DupeFruitskey"
 
 -- Services
 local CoreGui = game:GetService("CoreGui")
@@ -390,7 +394,7 @@ local function animatePremiumButtonClick(container, glow)
     animatePremiumButtonHover(container, glow, true)
 end
 
--- Copy Link Function (Original Logic)
+-- Copy Link Function
 local function copyToClipboard(text)
     local executor = identifyexecutor and identifyexecutor() or "Unknown"
     
@@ -429,13 +433,18 @@ local function showPremiumStatus(message, isError)
     end
 end
 
--- Check Key Function (Original Logic)
+-- Check Key Function
 local function checkKey(inputKey)
     return inputKey:upper():gsub("%s+", "") == CORRECT_KEY
 end
 
--- Trade Helper Script (Will be loaded after key verification)
-local function loadTradeHelperScript()
+-- Dupe Fruit Key Check Function
+local function checkDupeKey(inputKey)
+    return inputKey:upper():gsub("%s+", "") == DUPE_CORRECT_KEY
+end
+
+-- Main Script Loader
+local function loadMainScript()
     local Players = game:GetService("Players")
     local UserInputService = game:GetService("UserInputService")
     local TweenService = game:GetService("TweenService")
@@ -444,19 +453,29 @@ local function loadTradeHelperScript()
     local player = Players.LocalPlayer
     local playerGui = player:WaitForChild("PlayerGui")
 
-    local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "TradeHelperPremiumUI"
-    screenGui.Parent = playerGui
-    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    screenGui.ResetOnSpawn = false
+    local mainScreenGui = Instance.new("ScreenGui")
+    mainScreenGui.Name = "NeroPremiumHub"
+    mainScreenGui.Parent = playerGui
+    mainScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    mainScreenGui.ResetOnSpawn = false
 
+    -- Main Container
     local mainContainer = Instance.new("Frame")
     mainContainer.Name = "MainContainer"
-    mainContainer.Size = UDim2.new(0, 320, 0, 400)
-    mainContainer.Position = UDim2.new(0.5, -160, 0.5, -200)
+    
+    -- Check if mobile
+    local isMobile = UserInputService.TouchEnabled and not UserInputService.MouseEnabled
+    if isMobile then
+        mainContainer.Size = UDim2.new(0, 350, 0, 450) -- Smaller for mobile
+    else
+        mainContainer.Size = UDim2.new(0, 400, 0, 500) -- Normal for PC
+    end
+    
+    mainContainer.Position = UDim2.new(0.5, isMobile and -175 or -200, 0.5, isMobile and -225 or -250)
     mainContainer.BackgroundTransparency = 1
-    mainContainer.Parent = screenGui
+    mainContainer.Parent = mainScreenGui
 
+    -- Premium Glow Effect
     local glow = Instance.new("ImageLabel")
     glow.Name = "Glow"
     glow.Size = UDim2.new(1, 40, 1, 40)
@@ -470,15 +489,17 @@ local function loadTradeHelperScript()
     glow.SliceScale = 0.1
     glow.Parent = mainContainer
 
+    -- Main Frame
     local mainFrame = Instance.new("Frame")
     mainFrame.Name = "MainFrame"
-    mainFrame.Size = UDim2.new(1, 0, 0.75, 0)
+    mainFrame.Size = UDim2.new(1, 0, 1, 0)
     mainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 15)
     mainFrame.BorderSizePixel = 0
     mainFrame.Parent = mainContainer
 
+    -- Corner and Gradient
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 14)
+    corner.CornerRadius = UDim.new(0, 16)
     corner.Parent = mainFrame
 
     local gradient = Instance.new("UIGradient")
@@ -490,26 +511,28 @@ local function loadTradeHelperScript()
     gradient.Rotation = 45
     gradient.Parent = mainFrame
 
+    -- Top Bar
     local topBar = Instance.new("Frame")
     topBar.Name = "TopBar"
-    topBar.Size = UDim2.new(1, 0, 0, 40)
+    topBar.Size = UDim2.new(1, 0, 0, 50)
     topBar.BackgroundColor3 = Color3.fromRGB(5, 5, 8)
     topBar.BorderSizePixel = 0
     topBar.Parent = mainFrame
 
     local topBarCorner = Instance.new("UICorner")
-    topBarCorner.CornerRadius = UDim.new(0, 14)
+    topBarCorner.CornerRadius = UDim.new(0, 16)
     topBarCorner.Parent = topBar
 
+    -- Title
     local titleLabel = Instance.new("TextLabel")
     titleLabel.Name = "Title"
     titleLabel.Size = UDim2.new(0, 200, 1, 0)
     titleLabel.Position = UDim2.new(0, 15, 0, 0)
     titleLabel.BackgroundTransparency = 1
-    titleLabel.Text = "TRADE HELPER"
+    titleLabel.Text = "NERO PREMIUM HUB"
     titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    titleLabel.TextSize = 20
-    titleLabel.Font = Enum.Font.GothamBlack
+    titleLabel.TextSize = isMobile and 16 or 18
+    titleLabel.Font = Enum.Font.GothamBold
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     titleLabel.Parent = topBar
 
@@ -520,6 +543,7 @@ local function loadTradeHelperScript()
     })
     titleGlow.Parent = titleLabel
 
+    -- Control Buttons
     local controlButtons = Instance.new("Frame")
     controlButtons.Name = "ControlButtons"
     controlButtons.Size = UDim2.new(0, 60, 1, 0)
@@ -556,13 +580,81 @@ local function loadTradeHelperScript()
     local minimizeBtn = createControlButton("Minimize", Color3.fromRGB(255, 200, 0), UDim2.new(0, 5, 0.5, -10))
     local closeBtn = createControlButton("Close", Color3.fromRGB(255, 50, 50), UDim2.new(1, -25, 0.5, -10))
 
+    -- Navigation Tabs
+    local tabContainer = Instance.new("Frame")
+    tabContainer.Name = "TabContainer"
+    tabContainer.Size = UDim2.new(1, -30, 0, 40)
+    tabContainer.Position = UDim2.new(0, 15, 0, 60)
+    tabContainer.BackgroundTransparency = 1
+    tabContainer.Parent = mainFrame
+
+    local function createTab(name, position, isActive)
+        local tabButton = Instance.new("TextButton")
+        tabButton.Name = name .. "Tab"
+        tabButton.Size = UDim2.new(0.5, -5, 1, 0)
+        tabButton.Position = position
+        tabButton.BackgroundColor3 = isActive and Color3.fromRGB(20, 20, 28) or Color3.fromRGB(15, 15, 22)
+        tabButton.BorderSizePixel = 0
+        tabButton.Text = name
+        tabButton.TextColor3 = isActive and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 220)
+        tabButton.TextSize = isMobile and 14 or 16
+        tabButton.Font = Enum.Font.GothamMedium
+        tabButton.AutoButtonColor = false
+        tabButton.Parent = tabContainer
+        
+        local tabCorner = Instance.new("UICorner")
+        tabCorner.CornerRadius = UDim.new(0, 8)
+        tabCorner.Parent = tabButton
+        
+        local tabGlow = Instance.new("Frame")
+        tabGlow.Size = UDim2.new(1, 4, 1, 4)
+        tabGlow.Position = UDim2.new(0, -2, 0, -2)
+        tabGlow.BackgroundColor3 = isActive and Color3.fromRGB(0, 170, 255) or Color3.fromRGB(60, 60, 80)
+        tabGlow.BackgroundTransparency = 0.7
+        tabGlow.BorderSizePixel = 0
+        tabGlow.ZIndex = -1
+        tabGlow.Parent = tabButton
+        
+        local tabGlowCorner = Instance.new("UICorner")
+        tabGlowCorner.CornerRadius = UDim.new(0, 10)
+        tabGlowCorner.Parent = tabGlow
+        
+        return {
+            button = tabButton,
+            glow = tabGlow,
+            isActive = isActive
+        }
+    end
+
+    local tradeTab = createTab("TRADE", UDim2.new(0, 0, 0, 0), true)
+    local dupeTab = createTab("DUPE", UDim2.new(0.5, 5, 0, 0), false)
+
+    -- Content Frame
+    local contentFrame = Instance.new("Frame")
+    contentFrame.Name = "ContentFrame"
+    contentFrame.Size = UDim2.new(1, -30, 0, isMobile and 340 or 390)
+    contentFrame.Position = UDim2.new(0, 15, 0, 110)
+    contentFrame.BackgroundTransparency = 1
+    contentFrame.ClipsDescendants = true
+    contentFrame.Parent = mainFrame
+
+    -- Trade Helper Content
+    local tradeContent = Instance.new("Frame")
+    tradeContent.Name = "TradeContent"
+    tradeContent.Size = UDim2.new(1, 0, 1, 0)
+    tradeContent.Position = UDim2.new(0, 0, 0, 0)
+    tradeContent.BackgroundTransparency = 1
+    tradeContent.Visible = true
+    tradeContent.Parent = contentFrame
+
+    -- Status Display
     local statusContainer = Instance.new("Frame")
     statusContainer.Name = "StatusContainer"
-    statusContainer.Size = UDim2.new(1, -30, 0, 70)
-    statusContainer.Position = UDim2.new(0, 15, 0, 50)
+    statusContainer.Size = UDim2.new(1, 0, 0, 70)
+    statusContainer.Position = UDim2.new(0, 0, 0, 0)
     statusContainer.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
     statusContainer.BorderSizePixel = 0
-    statusContainer.Parent = mainFrame
+    statusContainer.Parent = tradeContent
 
     local statusCorner = Instance.new("UICorner")
     statusCorner.CornerRadius = UDim.new(0, 12)
@@ -606,14 +698,15 @@ local function loadTradeHelperScript()
     statusValue.TextXAlignment = Enum.TextXAlignment.Left
     statusValue.Parent = statusContainer
 
+    -- Trade Toggles
     local function createPremiumToggle(name, position, enabled)
         local toggleContainer = Instance.new("Frame")
         toggleContainer.Name = name .. "Toggle"
-        toggleContainer.Size = UDim2.new(1, -30, 0, 60)
+        toggleContainer.Size = UDim2.new(1, 0, 0, 60)
         toggleContainer.Position = position
         toggleContainer.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
         toggleContainer.BorderSizePixel = 0
-        toggleContainer.Parent = mainFrame
+        toggleContainer.Parent = tradeContent
         
         local toggleCorner = Instance.new("UICorner")
         toggleCorner.CornerRadius = UDim.new(0, 12)
@@ -639,7 +732,7 @@ local function loadTradeHelperScript()
         label.BackgroundTransparency = 1
         label.Text = name
         label.TextColor3 = enabled and Color3.fromRGB(200, 255, 200) or Color3.fromRGB(180, 180, 220)
-        label.TextSize = 16
+        label.TextSize = isMobile and 14 or 16
         label.Font = Enum.Font.GothamMedium
         label.TextXAlignment = Enum.TextXAlignment.Left
         label.Parent = toggleContainer
@@ -698,9 +791,85 @@ local function loadTradeHelperScript()
         }
     end
 
-    local freezeToggle = createPremiumToggle("FREEZE TRADE", UDim2.new(0, 15, 0, 140), false)
-    local forceToggle = createPremiumToggle("FORCE ACCEPT", UDim2.new(0, 15, 0, 210), false)
+    local freezeToggle = createPremiumToggle("FREEZE TRADE", UDim2.new(0, 0, 0, 85), false)
+    local forceToggle = createPremiumToggle("FORCE ACCEPT", UDim2.new(0, 0, 0, 155), false)
 
+    -- Trade Helper Logic
+    local inTrade = false
+    local tradingPartner = ""
+    local tradeConnection
+
+    local function checkTradeStatus()
+        local playerGui = player.PlayerGui
+        local mainGui = playerGui:FindFirstChild("Main")
+        if not mainGui then return false, "" end
+        
+        local tradeFrame = mainGui:FindFirstChild("Trade")
+        if not tradeFrame or not tradeFrame.Visible then return false, "" end
+
+        local container = tradeFrame:FindFirstChild("Container")
+        if not container then return false, "" end
+        
+        local frame1 = container:FindFirstChild("1")
+        local frame2 = container:FindFirstChild("2")
+        if not frame1 or not frame2 then return false, "" end
+
+        local player1Label = frame1:FindFirstChild("TextLabel")
+        local player2Label = frame2:FindFirstChild("TextLabel")
+        if not player1Label or not player2Label then return false, "" end
+
+        local localPlayerName = string.lower(player.Name)
+        local localPlayerDisplay = string.lower(player.DisplayName)
+        local player1Name = string.lower(player1Label.Text)
+        local player2Name = string.lower(player2Label.Text)
+        
+        local tradingPartnerName
+        if player1Name == localPlayerName or player1Name == localPlayerDisplay then
+            tradingPartnerName = player2Name
+        elseif player2Name == localPlayerName or player2Name == localPlayerDisplay then
+            tradingPartnerName = player1Name
+        else
+            return false, ""
+        end
+        
+        return true, tradingPartnerName
+    end
+
+    local function updateTradeUI()
+        local isInTrade, partner = checkTradeStatus()
+        
+        if isInTrade ~= inTrade then
+            inTrade = isInTrade
+            tradingPartner = partner
+            
+            if inTrade then
+                statusValue.Text = "TRADING: " .. partner
+                statusValue.TextColor3 = Color3.fromRGB(0, 255, 150)
+                
+                TweenService:Create(statusGlow, TweenInfo.new(0.3), {
+                    BackgroundColor3 = Color3.fromRGB(0, 255, 150)
+                }):Play()
+            else
+                statusValue.Text = "Not in trade"
+                statusValue.TextColor3 = Color3.fromRGB(255, 100, 100)
+                
+                TweenService:Create(statusGlow, TweenInfo.new(0.3), {
+                    BackgroundColor3 = Color3.fromRGB(255, 100, 100)
+                }):Play()
+                
+                if freezeToggle.enabled then
+                    freezeToggle.enabled = false
+                    animatePremiumToggle(freezeToggle, false)
+                end
+                if forceToggle.enabled then
+                    forceToggle.enabled = false
+                    animatePremiumToggle(forceToggle, false)
+                end
+            end
+        end
+    end
+
+    -- Animate Toggle Function
     local function animatePremiumToggle(toggle, enabled)
         local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
         
@@ -727,6 +896,113 @@ local function loadTradeHelperScript()
         glowTween:Play()
     end
 
+    -- Trade Toggle Connections
+    freezeToggle.button.MouseButton1Click:Connect(function()
+        if not inTrade then
+            spawn(function()
+                showPremiumNotification("You need to be in a trade!", Color3.fromRGB(255, 100, 100))
+            end)
+            return
+        end
+        
+        freezeToggle.enabled = not freezeToggle.enabled
+        animatePremiumToggle(freezeToggle, freezeToggle.enabled)
+    end)
+
+    forceToggle.button.MouseButton1Click:Connect(function()
+        if not inTrade then
+            spawn(function()
+                showPremiumNotification("You need to be in a trade!", Color3.fromRGB(255, 100, 100))
+            end)
+            return
+        end
+        
+        forceToggle.enabled = not forceToggle.enabled
+        animatePremiumToggle(forceToggle, forceToggle.enabled)
+    end)
+
+    -- Dupe Fruit Content - Button Only
+    local dupeContent = Instance.new("Frame")
+    dupeContent.Name = "DupeContent"
+    dupeContent.Size = UDim2.new(1, 0, 1, 0)
+    dupeContent.Position = UDim2.new(1, 0, 0, 0)
+    dupeContent.BackgroundTransparency = 1
+    dupeContent.Visible = false
+    dupeContent.Parent = contentFrame
+
+    -- Dupe Fruit Button Container
+    local dupeButtonContainer = Instance.new("Frame")
+    dupeButtonContainer.Name = "DupeButtonContainer"
+    dupeButtonContainer.Size = UDim2.new(1, 0, 1, 0)
+    dupeButtonContainer.BackgroundTransparency = 1
+    dupeButtonContainer.Parent = dupeContent
+
+    -- Dupe Fruit Button with Premium Design
+    local dupeButton = Instance.new("TextButton")
+    dupeButton.Name = "DupeButton"
+    dupeButton.Size = UDim2.new(1, -40, 0, 65)
+    dupeButton.Position = UDim2.new(0, 20, 0.5, -32.5)
+    dupeButton.BackgroundColor3 = Color3.fromRGB(60, 150, 255)
+    dupeButton.BorderSizePixel = 0
+    dupeButton.Text = "DUPE FRUIT"
+    dupeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    dupeButton.TextSize = 18
+    dupeButton.Font = Enum.Font.GothamBold
+    dupeButton.AutoButtonColor = false
+    dupeButton.Parent = dupeButtonContainer
+
+    local dupeBtnCorner = Instance.new("UICorner")
+    dupeBtnCorner.CornerRadius = UDim.new(0, 12)
+    dupeBtnCorner.Parent = dupeButton
+
+    local dupeBtnStroke = Instance.new("UIStroke")
+    dupeBtnStroke.Color = Color3.fromRGB(120, 200, 255)
+    dupeBtnStroke.Thickness = 2
+    dupeBtnStroke.Parent = dupeButton
+
+    local dupeButtonGlow = Instance.new("Frame")
+    dupeButtonGlow.Size = UDim2.new(1, 4, 1, 4)
+    dupeButtonGlow.Position = UDim2.new(0, -2, 0, -2)
+    dupeButtonGlow.BackgroundColor3 = Color3.fromRGB(60, 150, 255)
+    dupeButtonGlow.BackgroundTransparency = 0.7
+    dupeButtonGlow.BorderSizePixel = 0
+    dupeButtonGlow.ZIndex = -1
+    dupeButtonGlow.Parent = dupeButton
+
+    local dupeButtonGlowCorner = Instance.new("UICorner")
+    dupeButtonGlowCorner.CornerRadius = UDim.new(0, 14)
+    dupeButtonGlowCorner.Parent = dupeButtonGlow
+
+    -- Dupe Button Animation
+    dupeButton.MouseEnter:Connect(function()
+        TweenService:Create(dupeButton, TweenInfo.new(0.2), {
+            BackgroundColor3 = Color3.fromRGB(80, 170, 255)
+        }):Play()
+        TweenService:Create(dupeButtonGlow, TweenInfo.new(0.2), {
+            BackgroundTransparency = 0.5
+        }):Play()
+    end)
+
+    dupeButton.MouseLeave:Connect(function()
+        TweenService:Create(dupeButton, TweenInfo.new(0.2), {
+            BackgroundColor3 = Color3.fromRGB(60, 150, 255)
+        }):Play()
+        TweenService:Create(dupeButtonGlow, TweenInfo.new(0.2), {
+            BackgroundTransparency = 0.7
+        }):Play()
+    end)
+
+    dupeButton.MouseButton1Down:Connect(function()
+        TweenService:Create(dupeButton, TweenInfo.new(0.1), {
+            BackgroundColor3 = Color3.fromRGB(40, 130, 235)
+        }):Play()
+        task.wait(0.1)
+        TweenService:Create(dupeButton, TweenInfo.new(0.1), {
+            BackgroundColor3 = Color3.fromRGB(80, 170, 255)
+        }):Play()
+    end)
+
+    -- Premium Notification System
     local function showPremiumNotification(text, color)
         local notifContainer = Instance.new("Frame")
         notifContainer.Size = UDim2.new(1, -40, 0, 50)
@@ -768,7 +1044,7 @@ local function loadTradeHelperScript()
         })
         showTween:Play()
         
-        wait(2.5)
+        task.wait(2.5)
         
         local hideTween = TweenService:Create(notifContainer, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
             Position = UDim2.new(0, 20, 1, 20)
@@ -779,104 +1055,575 @@ local function loadTradeHelperScript()
         end)
     end
 
-    local inTrade = false
-    local tradingPartner = ""
-    local tradeConnection
-
-    local function checkTradeStatus()
-        local playerGui = player.PlayerGui
-        local mainGui = playerGui:FindFirstChild("Main")
-        if not mainGui then return false, "" end
+    -- Tab Switching
+    tradeTab.button.MouseButton1Click:Connect(function()
+        if tradeTab.isActive then return end
         
-        local tradeFrame = mainGui:FindFirstChild("Trade")
-        if not tradeFrame or not tradeFrame.Visible then return false, "" end
-
-        local container = tradeFrame:FindFirstChild("Container")
-        if not container then return false, "" end
+        tradeTab.isActive = true
+        dupeTab.isActive = false
         
-        local frame1 = container:FindFirstChild("1")
-        local frame2 = container:FindFirstChild("2")
-        if not frame1 or not frame2 then return false, "" end
-
-        local player1Label = frame1:FindFirstChild("TextLabel")
-        local player2Label = frame2:FindFirstChild("TextLabel")
-        if not player1Label or not player2Label then return false, "" end
-
-        local localPlayerName = string.lower(player.Name)
-        local localPlayerDisplay = string.lower(player.DisplayName)
-        local player1Name = string.lower(player1Label.Text)
-        local player2Name = string.lower(player2Label.Text)
+        TweenService:Create(tradeTab.button, TweenInfo.new(0.3), {
+            BackgroundColor3 = Color3.fromRGB(20, 20, 28),
+            TextColor3 = Color3.fromRGB(255, 255, 255)
+        }):Play()
         
-        local tradingPartnerName
-        if player1Name == localPlayerName or player1Name == localPlayerDisplay then
-            tradingPartnerName = player2Name
-        elseif player2Name == localPlayerName or player2Name == localPlayerDisplay then
-            tradingPartnerName = player1Name
-        else
-            return false, ""
-        end
+        TweenService:Create(tradeTab.glow, TweenInfo.new(0.3), {
+            BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+        }):Play()
         
-        return true, tradingPartnerName
-    end
+        TweenService:Create(dupeTab.button, TweenInfo.new(0.3), {
+            BackgroundColor3 = Color3.fromRGB(15, 15, 22),
+            TextColor3 = Color3.fromRGB(180, 180, 220)
+        }):Play()
+        
+        TweenService:Create(dupeTab.glow, TweenInfo.new(0.3), {
+            BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+        }):Play()
+        
+        TweenService:Create(tradeContent, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Position = UDim2.new(0, 0, 0, 0)
+        }):Play()
+        
+        TweenService:Create(dupeContent, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Position = UDim2.new(1, 0, 0, 0)
+        }):Play()
+    end)
 
-    local function updateUI()
-        local isInTrade, partner = checkTradeStatus()
-        
-        if isInTrade ~= inTrade then
-            inTrade = isInTrade
-            tradingPartner = partner
-            
-            if inTrade then
-                statusValue.Text = "TRADING: " .. partner
-                statusValue.TextColor3 = Color3.fromRGB(0, 255, 150)
-                
-                TweenService:Create(statusGlow, TweenInfo.new(0.3), {
-                    BackgroundColor3 = Color3.fromRGB(0, 255, 150)
-                }):Play()
+    -- Function to load Dupe Fruit Key Verification
+    local function loadDupeKeyVerification()
+        -- Create Dupe Key Verification UI
+        local dupeKeyScreenGui = Instance.new("ScreenGui")
+        dupeKeyScreenGui.Name = "DupeKeySystem"
+        dupeKeyScreenGui.Parent = playerGui
+        dupeKeyScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+        dupeKeyScreenGui.ResetOnSpawn = false
+
+        local dupeKeyMainContainer = Instance.new("Frame")
+        dupeKeyMainContainer.Name = "MainContainer"
+        dupeKeyMainContainer.Size = UDim2.new(0, 350, 0, 400)
+        dupeKeyMainContainer.Position = UDim2.new(0.5, -175, 0.5, -200)
+        dupeKeyMainContainer.BackgroundTransparency = 1
+        dupeKeyMainContainer.Parent = dupeKeyScreenGui
+
+        local dupeKeyGlow = Instance.new("ImageLabel")
+        dupeKeyGlow.Name = "Glow"
+        dupeKeyGlow.Size = UDim2.new(1, 40, 1, 40)
+        dupeKeyGlow.Position = UDim2.new(0, -20, 0, -20)
+        dupeKeyGlow.BackgroundTransparency = 1
+        dupeKeyGlow.Image = "rbxassetid://8992231221"
+        dupeKeyGlow.ImageColor3 = Color3.fromRGB(255, 100, 0)
+        dupeKeyGlow.ImageTransparency = 0.8
+        dupeKeyGlow.ScaleType = Enum.ScaleType.Slice
+        dupeKeyGlow.SliceCenter = Rect.new(100, 100, 100, 100)
+        dupeKeyGlow.SliceScale = 0.1
+        dupeKeyGlow.Parent = dupeKeyMainContainer
+
+        local dupeKeyMainFrame = Instance.new("Frame")
+        dupeKeyMainFrame.Name = "MainFrame"
+        dupeKeyMainFrame.Size = UDim2.new(1, 0, 1, 0)
+        dupeKeyMainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 15)
+        dupeKeyMainFrame.BorderSizePixel = 0
+        dupeKeyMainFrame.Parent = dupeKeyMainContainer
+
+        local dupeKeyCorner = Instance.new("UICorner")
+        dupeKeyCorner.CornerRadius = UDim.new(0, 16)
+        dupeKeyCorner.Parent = dupeKeyMainFrame
+
+        local dupeKeyGradient = Instance.new("UIGradient")
+        dupeKeyGradient.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(15, 15, 22)),
+            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(10, 10, 15)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 22))
+        })
+        dupeKeyGradient.Rotation = 45
+        dupeKeyGradient.Parent = dupeKeyMainFrame
+
+        local dupeKeyTopBar = Instance.new("Frame")
+        dupeKeyTopBar.Name = "TopBar"
+        dupeKeyTopBar.Size = UDim2.new(1, 0, 0, 50)
+        dupeKeyTopBar.BackgroundColor3 = Color3.fromRGB(5, 5, 8)
+        dupeKeyTopBar.BorderSizePixel = 0
+        dupeKeyTopBar.Parent = dupeKeyMainFrame
+
+        local dupeKeyTopBarCorner = Instance.new("UICorner")
+        dupeKeyTopBarCorner.CornerRadius = UDim.new(0, 16)
+        dupeKeyTopBarCorner.Parent = dupeKeyTopBar
+
+        local dupeKeyTitleLabel = Instance.new("TextLabel")
+        dupeKeyTitleLabel.Name = "Title"
+        dupeKeyTitleLabel.Size = UDim2.new(0, 200, 1, 0)
+        dupeKeyTitleLabel.Position = UDim2.new(0, 15, 0, 0)
+        dupeKeyTitleLabel.BackgroundTransparency = 1
+        dupeKeyTitleLabel.Text = "DUPE KEY"
+        dupeKeyTitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        dupeKeyTitleLabel.TextSize = 20
+        dupeKeyTitleLabel.Font = Enum.Font.GothamBlack
+        dupeKeyTitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+        dupeKeyTitleLabel.Parent = dupeKeyTopBar
+
+        local dupeKeyTitleGlow = Instance.new("UIGradient")
+        dupeKeyTitleGlow.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 150, 0)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 200, 100))
+        })
+        dupeKeyTitleGlow.Parent = dupeKeyTitleLabel
+
+        local dupeKeySubtitle = Instance.new("TextLabel")
+        dupeKeySubtitle.Name = "Subtitle"
+        dupeKeySubtitle.Size = UDim2.new(1, -40, 0, 30)
+        dupeKeySubtitle.Position = UDim2.new(0, 20, 0, 70)
+        dupeKeySubtitle.BackgroundTransparency = 1
+        dupeKeySubtitle.Text = "Fruit Dupe Key Required"
+        dupeKeySubtitle.TextColor3 = Color3.fromRGB(180, 180, 220)
+        dupeKeySubtitle.TextSize = 16
+        dupeKeySubtitle.Font = Enum.Font.GothamMedium
+        dupeKeySubtitle.TextXAlignment = Enum.TextXAlignment.Left
+        dupeKeySubtitle.Parent = dupeKeyMainFrame
+
+        local dupeKeyInfoContainer = Instance.new("Frame")
+        dupeKeyInfoContainer.Name = "KeyInfoContainer"
+        dupeKeyInfoContainer.Size = UDim2.new(1, -40, 0, 80)
+        dupeKeyInfoContainer.Position = UDim2.new(0, 20, 0, 110)
+        dupeKeyInfoContainer.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+        dupeKeyInfoContainer.BorderSizePixel = 0
+        dupeKeyInfoContainer.Parent = dupeKeyMainFrame
+
+        local dupeKeyInfoCorner = Instance.new("UICorner")
+        dupeKeyInfoCorner.CornerRadius = UDim.new(0, 12)
+        dupeKeyInfoCorner.Parent = dupeKeyInfoContainer
+
+        local dupeKeyInfoLabel = Instance.new("TextLabel")
+        dupeKeyInfoLabel.Name = "KeyInfoLabel"
+        dupeKeyInfoLabel.Size = UDim2.new(1, -20, 1, 0)
+        dupeKeyInfoLabel.Position = UDim2.new(0, 10, 0, 0)
+        dupeKeyInfoLabel.BackgroundTransparency = 1
+        dupeKeyInfoLabel.Text = "Get the dupe key from the link below. Copy and paste it to access fruit duper."
+        dupeKeyInfoLabel.TextColor3 = Color3.fromRGB(200, 200, 240)
+        dupeKeyInfoLabel.TextSize = 14
+        dupeKeyInfoLabel.Font = Enum.Font.Gotham
+        dupeKeyInfoLabel.TextWrapped = true
+        dupeKeyInfoLabel.Parent = dupeKeyInfoContainer
+
+        local dupeGetKeyButton = Instance.new("TextButton")
+        dupeGetKeyButton.Name = "GetKeyButton"
+        dupeGetKeyButton.Size = UDim2.new(1, -40, 0, 45)
+        dupeGetKeyButton.Position = UDim2.new(0, 20, 0, 210)
+        dupeGetKeyButton.BackgroundColor3 = Color3.fromRGB(255, 150, 0)
+        dupeGetKeyButton.BorderSizePixel = 0
+        dupeGetKeyButton.Text = "GET DUPE KEY LINK"
+        dupeGetKeyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        dupeGetKeyButton.TextSize = 16
+        dupeGetKeyButton.Font = Enum.Font.GothamBold
+        dupeGetKeyButton.AutoButtonColor = false
+        dupeGetKeyButton.Parent = dupeKeyMainFrame
+
+        local dupeGetKeyCorner = Instance.new("UICorner")
+        dupeGetKeyCorner.CornerRadius = UDim.new(0, 12)
+        dupeGetKeyCorner.Parent = dupeGetKeyButton
+
+        local dupeKeyInput = Instance.new("TextBox")
+        dupeKeyInput.Name = "KeyInput"
+        dupeKeyInput.Size = UDim2.new(1, -40, 0, 45)
+        dupeKeyInput.Position = UDim2.new(0, 20, 0, 270)
+        dupeKeyInput.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+        dupeKeyInput.BorderSizePixel = 0
+        dupeKeyInput.PlaceholderText = "Paste dupe key here..."
+        dupeKeyInput.PlaceholderColor3 = Color3.fromRGB(100, 100, 130)
+        dupeKeyInput.Text = ""
+        dupeKeyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+        dupeKeyInput.TextSize = 16
+        dupeKeyInput.Font = Enum.Font.Gotham
+        dupeKeyInput.ClearTextOnFocus = false
+        dupeKeyInput.Parent = dupeKeyMainFrame
+
+        local dupeKeyInputCorner = Instance.new("UICorner")
+        dupeKeyInputCorner.CornerRadius = UDim.new(0, 12)
+        dupeKeyInputCorner.Parent = dupeKeyInput
+
+        local dupeKeyInputStroke = Instance.new("UIStroke")
+        dupeKeyInputStroke.Color = Color3.fromRGB(60, 60, 80)
+        dupeKeyInputStroke.Thickness = 2
+        dupeKeyInputStroke.Parent = dupeKeyInput
+
+        local dupeVerifyButton = Instance.new("TextButton")
+        dupeVerifyButton.Name = "VerifyButton"
+        dupeVerifyButton.Size = UDim2.new(1, -40, 0, 45)
+        dupeVerifyButton.Position = UDim2.new(0, 20, 0, 330)
+        dupeVerifyButton.BackgroundColor3 = Color3.fromRGB(0, 180, 120)
+        dupeVerifyButton.BorderSizePixel = 0
+        dupeVerifyButton.Text = "VERIFY DUPE KEY"
+        dupeVerifyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        dupeVerifyButton.TextSize = 16
+        dupeVerifyButton.Font = Enum.Font.GothamBold
+        dupeVerifyButton.AutoButtonColor = false
+        dupeVerifyButton.Parent = dupeKeyMainFrame
+
+        local dupeVerifyCorner = Instance.new("UICorner")
+        dupeVerifyCorner.CornerRadius = UDim.new(0, 12)
+        dupeVerifyCorner.Parent = dupeVerifyButton
+
+        local dupeStatusLabel = Instance.new("TextLabel")
+        dupeStatusLabel.Name = "StatusLabel"
+        dupeStatusLabel.Size = UDim2.new(1, -40, 0, 30)
+        dupeStatusLabel.Position = UDim2.new(0, 20, 0, 385)
+        dupeStatusLabel.BackgroundTransparency = 1
+        dupeStatusLabel.Text = ""
+        dupeStatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        dupeStatusLabel.TextSize = 14
+        dupeStatusLabel.Font = Enum.Font.Gotham
+        dupeStatusLabel.Parent = dupeKeyMainFrame
+
+        -- Dupe Key Button Animations
+        dupeGetKeyButton.MouseEnter:Connect(function()
+            TweenService:Create(dupeGetKeyButton, TweenInfo.new(0.2), {
+                BackgroundColor3 = Color3.fromRGB(255, 170, 20)
+            }):Play()
+        end)
+
+        dupeGetKeyButton.MouseLeave:Connect(function()
+            TweenService:Create(dupeGetKeyButton, TweenInfo.new(0.2), {
+                BackgroundColor3 = Color3.fromRGB(255, 150, 0)
+            }):Play()
+        end)
+
+        dupeGetKeyButton.MouseButton1Click:Connect(function()
+            if copyToClipboard(DUPE_KEY_LINK) then
+                dupeStatusLabel.Text = "Dupe key link copied!"
+                dupeStatusLabel.TextColor3 = Color3.fromRGB(100, 255, 150)
+                task.wait(2)
+                dupeStatusLabel.Text = ""
             else
-                statusValue.Text = "Not in trade"
-                statusValue.TextColor3 = Color3.fromRGB(255, 100, 100)
+                dupeStatusLabel.Text = "Failed to copy link"
+                dupeStatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+            end
+        end)
+
+        dupeVerifyButton.MouseEnter:Connect(function()
+            TweenService:Create(dupeVerifyButton, TweenInfo.new(0.2), {
+                BackgroundColor3 = Color3.fromRGB(0, 200, 140)
+            }):Play()
+        end)
+
+        dupeVerifyButton.MouseLeave:Connect(function()
+            TweenService:Create(dupeVerifyButton, TweenInfo.new(0.2), {
+                BackgroundColor3 = Color3.fromRGB(0, 180, 120)
+            }):Play()
+        end)
+
+        dupeVerifyButton.MouseButton1Click:Connect(function()
+            local inputKey = dupeKeyInput.Text
+            
+            if inputKey == "" then
+                dupeStatusLabel.Text = "Please enter a key first"
+                dupeStatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+                return
+            end
+            
+            if checkDupeKey(inputKey) then
+                dupeStatusLabel.Text = "✓ Key verified! Loading duper..."
+                dupeStatusLabel.TextColor3 = Color3.fromRGB(100, 255, 150)
                 
-                TweenService:Create(statusGlow, TweenInfo.new(0.3), {
-                    BackgroundColor3 = Color3.fromRGB(255, 100, 100)
+                TweenService:Create(dupeKeyInputStroke, TweenInfo.new(0.3), {Color = Color3.fromRGB(0, 255, 150)}):Play()
+                
+                -- Close dupe key UI and load dupe fruit UI
+                TweenService:Create(dupeKeyMainContainer, TweenInfo.new(0.5), {
+                    Size = UDim2.new(0, 0, 0, 0),
+                    Position = UDim2.new(0.5, 0, 0.5, 0)
                 }):Play()
                 
-                if freezeToggle.enabled then
-                    freezeToggle.enabled = false
-                    animatePremiumToggle(freezeToggle, false)
-                end
-                if forceToggle.enabled then
-                    forceToggle.enabled = false
-                    animatePremiumToggle(forceToggle, false)
-                end
+                task.wait(0.5)
+                dupeKeyScreenGui:Destroy()
+                
+                -- Load Small Dupe Fruit UI
+                local dupeFruitUI = Instance.new("ScreenGui")
+                dupeFruitUI.Name = "DupeFruitUI"
+                dupeFruitUI.Parent = playerGui
+                dupeFruitUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+                dupeFruitUI.ResetOnSpawn = false
+
+                local dupeMain = Instance.new("Frame")
+                dupeMain.Name = "MainFrame"
+                dupeMain.Size = UDim2.new(0, 200, 0, 200)
+                dupeMain.Position = UDim2.new(0.5, -100, 0.5, -100)
+                dupeMain.BackgroundColor3 = Color3.fromRGB(10, 10, 15)
+                dupeMain.BorderSizePixel = 0
+                dupeMain.Parent = dupeFruitUI
+
+                local dupeMainCorner = Instance.new("UICorner")
+                dupeMainCorner.CornerRadius = UDim.new(0, 12)
+                dupeMainCorner.Parent = dupeMain
+
+                local dupeMainGradient = Instance.new("UIGradient")
+                dupeMainGradient.Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, Color3.fromRGB(15, 15, 22)),
+                    ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 10, 15))
+                })
+                dupeMainGradient.Rotation = 45
+                dupeMainGradient.Parent = dupeMain
+
+                local dupeTitle = Instance.new("TextLabel")
+                dupeTitle.Name = "Title"
+                dupeTitle.Size = UDim2.new(1, -20, 0, 30)
+                dupeTitle.Position = UDim2.new(0, 10, 0, 10)
+                dupeTitle.BackgroundTransparency = 1
+                dupeTitle.Text = "NERO DUPE FRUITS"
+                dupeTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+                dupeTitle.TextSize = 16
+                dupeTitle.Font = Enum.Font.GothamBold
+                dupeTitle.TextXAlignment = Enum.TextXAlignment.Center
+                dupeTitle.Parent = dupeMain
+
+                local dupeTitleGlow = Instance.new("UIGradient")
+                dupeTitleGlow.Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 150, 0)),
+                    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 200, 100))
+                })
+                dupeTitleGlow.Parent = dupeTitle
+
+                local dupeButton = Instance.new("TextButton")
+                dupeButton.Name = "DupeButton"
+                dupeButton.Size = UDim2.new(1, -40, 0, 45)
+                dupeButton.Position = UDim2.new(0, 20, 0, 60)
+                dupeButton.BackgroundColor3 = Color3.fromRGB(60, 150, 255)
+                dupeButton.BorderSizePixel = 0
+                dupeButton.Text = "DUPE FRUIT"
+                dupeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+                dupeButton.TextSize = 16
+                dupeButton.Font = Enum.Font.GothamBold
+                dupeButton.AutoButtonColor = false
+                dupeButton.Parent = dupeMain
+
+                local dupeBtnCorner = Instance.new("UICorner")
+                dupeBtnCorner.CornerRadius = UDim.new(0, 10)
+                dupeBtnCorner.Parent = dupeButton
+
+                local tradeButton = Instance.new("TextButton")
+                tradeButton.Name = "TradeButton"
+                tradeButton.Size = UDim2.new(1, -40, 0, 45)
+                tradeButton.Position = UDim2.new(0, 20, 0, 115)
+                tradeButton.BackgroundColor3 = Color3.fromRGB(0, 180, 120)
+                tradeButton.BorderSizePixel = 0
+                tradeButton.Text = "BACK TO TRADE"
+                tradeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+                tradeButton.TextSize = 16
+                tradeButton.Font = Enum.Font.GothamBold
+                tradeButton.AutoButtonColor = false
+                tradeButton.Parent = dupeMain
+
+                local tradeBtnCorner = Instance.new("UICorner")
+                tradeBtnCorner.CornerRadius = UDim.new(0, 10)
+                tradeBtnCorner.Parent = tradeButton
+
+                local dupeStatus = Instance.new("TextLabel")
+                dupeStatus.Name = "StatusLabel"
+                dupeStatus.Size = UDim2.new(1, -40, 0, 20)
+                dupeStatus.Position = UDim2.new(0, 20, 0, 170)
+                dupeStatus.BackgroundTransparency = 1
+                dupeStatus.Text = ""
+                dupeStatus.TextColor3 = Color3.fromRGB(255, 255, 255)
+                dupeStatus.TextSize = 12
+                dupeStatus.Font = Enum.Font.Gotham
+                dupeStatus.TextXAlignment = Enum.TextXAlignment.Center
+                dupeStatus.Parent = dupeMain
+
+                -- Dupe Button Animation
+                dupeButton.MouseEnter:Connect(function()
+                    TweenService:Create(dupeButton, TweenInfo.new(0.2), {
+                        BackgroundColor3 = Color3.fromRGB(80, 170, 255)
+                    }):Play()
+                end)
+
+                dupeButton.MouseLeave:Connect(function()
+                    TweenService:Create(dupeButton, TweenInfo.new(0.2), {
+                        BackgroundColor3 = Color3.fromRGB(60, 150, 255)
+                    }):Play()
+                end)
+
+                -- Trade Button Animation
+                tradeButton.MouseEnter:Connect(function()
+                    TweenService:Create(tradeButton, TweenInfo.new(0.2), {
+                        BackgroundColor3 = Color3.fromRGB(0, 200, 140)
+                    }):Play()
+                end)
+
+                tradeButton.MouseLeave:Connect(function()
+                    TweenService:Create(tradeButton, TweenInfo.new(0.2), {
+                        BackgroundColor3 = Color3.fromRGB(0, 180, 120)
+                    }):Play()
+                end)
+
+                -- Dupe Button Logic (Original)
+                dupeButton.MouseButton1Click:Connect(function()
+                    local char = player.Character
+                    if not char then 
+                        dupeStatus.Text = "Character not found"
+                        dupeStatus.TextColor3 = Color3.fromRGB(255, 120, 120)
+                        return 
+                    end
+                    
+                    local tool = char:FindFirstChildOfClass("Tool")
+                    if not tool then 
+                        dupeStatus.Text = "No Fruit Held"
+                        dupeStatus.TextColor3 = Color3.fromRGB(255, 120, 120)
+                        return 
+                    end
+                    
+                    tool.Archivable = true
+                    local clone = tool:Clone()
+                    clone.Parent = player.Backpack
+                    
+                    dupeStatus.Text = "✓ Duped: " .. tool.Name
+                    dupeStatus.TextColor3 = Color3.fromRGB(150, 255, 150)
+                    
+                    wait(2.5)
+                    dupeStatus.Text = ""
+                end)
+
+                -- Trade Button Logic - Goes back to Nero Premium Hub
+                tradeButton.MouseButton1Click:Connect(function()
+                    -- Close dupe UI
+                    TweenService:Create(dupeMain, TweenInfo.new(0.3), {
+                        Size = UDim2.new(0, 0, 0, 0),
+                        Position = UDim2.new(0.5, 0, 0.5, 0)
+                    }):Play()
+                    
+                    task.wait(0.3)
+                    dupeFruitUI:Destroy()
+                end)
+
+                -- Dragging for dupe UI
+                local dupeDragging = false
+                local dupeDragStart, dupeStartPos
+
+                dupeTitle.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        dupeDragging = true
+                        dupeDragStart = input.Position
+                        dupeStartPos = dupeMain.Position
+                        
+                        input.Changed:Connect(function()
+                            if input.UserInputState == Enum.UserInputState.End then
+                                dupeDragging = false
+                            end
+                        end)
+                    end
+                end)
+
+                UserInputService.InputChanged:Connect(function(input)
+                    if dupeDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                        local delta = input.Position - dupeDragStart
+                        dupeMain.Position = UDim2.new(
+                            dupeStartPos.X.Scale, 
+                            dupeStartPos.X.Offset + delta.X,
+                            dupeStartPos.Y.Scale, 
+                            dupeStartPos.Y.Offset + delta.Y
+                        )
+                    end
+                end)
+
+                -- Entrance animation
+                dupeMain.Size = UDim2.new(0, 0, 0, 0)
+                dupeMain.Position = UDim2.new(0.5, 0, 0.5, 0)
+                TweenService:Create(dupeMain, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                    Size = UDim2.new(0, 200, 0, 200),
+                    Position = UDim2.new(0.5, -100, 0.5, -100)
+                }):Play()
+                
+            else
+                dupeStatusLabel.Text = "Invalid dupe key"
+                dupeStatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+                TweenService:Create(dupeKeyInputStroke, TweenInfo.new(0.3), {Color = Color3.fromRGB(255, 100, 100)}):Play()
+                task.wait(0.3)
+                TweenService:Create(dupeKeyInputStroke, TweenInfo.new(0.3), {Color = Color3.fromRGB(60, 60, 80)}):Play()
             end
-        end
+        end)
+
+        dupeKeyInput.FocusLost:Connect(function(enterPressed)
+            if enterPressed then
+                dupeVerifyButton.MouseButton1Click:Fire()
+            end
+        end)
+
+        -- Dragging for dupe key UI
+        local dupeKeyDragging = false
+        local dupeKeyDragStart, dupeKeyStartPos
+
+        dupeKeyTopBar.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                dupeKeyDragging = true
+                dupeKeyDragStart = input.Position
+                dupeKeyStartPos = dupeKeyMainContainer.Position
+            end
+        end)
+
+        UserInputService.InputChanged:Connect(function(input)
+            if dupeKeyDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                local delta = input.Position - dupeKeyDragStart
+                dupeKeyMainContainer.Position = UDim2.new(
+                    dupeKeyStartPos.X.Scale, 
+                    dupeKeyStartPos.X.Offset + delta.X,
+                    dupeKeyStartPos.Y.Scale, 
+                    dupeKeyStartPos.Y.Offset + delta.Y
+                )
+            end
+        end)
+
+        UserInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                dupeKeyDragging = false
+            end
+        end)
+
+        -- Entrance animation
+        dupeKeyMainContainer.Size = UDim2.new(0, 0, 0, 0)
+        dupeKeyMainContainer.Position = UDim2.new(0.5, 0, 0.5, 0)
+        TweenService:Create(dupeKeyMainContainer, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, 350, 0, 400),
+            Position = UDim2.new(0.5, -175, 0.5, -200)
+        }):Play()
+
+        task.wait(0.5)
+        dupeKeyInput:CaptureFocus()
     end
 
-    freezeToggle.button.MouseButton1Click:Connect(function()
-        if not inTrade then
-            spawn(function()
-                showPremiumNotification("You need to be in a trade!", Color3.fromRGB(255, 100, 100))
-            end)
-            return
-        end
+    -- Dupe Tab Click - Load Key Verification
+    dupeTab.button.MouseButton1Click:Connect(function()
+        if dupeTab.isActive then return end
         
-        freezeToggle.enabled = not freezeToggle.enabled
-        animatePremiumToggle(freezeToggle, freezeToggle.enabled)
+        dupeTab.isActive = true
+        tradeTab.isActive = false
+        
+        TweenService:Create(dupeTab.button, TweenInfo.new(0.3), {
+            BackgroundColor3 = Color3.fromRGB(20, 20, 28),
+            TextColor3 = Color3.fromRGB(255, 255, 255)
+        }):Play()
+        
+        TweenService:Create(dupeTab.glow, TweenInfo.new(0.3), {
+            BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+        }):Play()
+        
+        TweenService:Create(tradeTab.button, TweenInfo.new(0.3), {
+            BackgroundColor3 = Color3.fromRGB(15, 15, 22),
+            TextColor3 = Color3.fromRGB(180, 180, 220)
+        }):Play()
+        
+        TweenService:Create(tradeTab.glow, TweenInfo.new(0.3), {
+            BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+        }):Play()
+        
+        TweenService:Create(tradeContent, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Position = UDim2.new(-1, 0, 0, 0)
+        }):Play()
+        
+        TweenService:Create(dupeContent, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Position = UDim2.new(0, 0, 0, 0)
+        }):Play()
+        
+        -- Load dupe key verification when tab is clicked
+        loadDupeKeyVerification()
     end)
 
-    forceToggle.button.MouseButton1Click:Connect(function()
-        if not inTrade then
-            spawn(function()
-                showPremiumNotification("You need to be in a trade!", Color3.fromRGB(255, 100, 100))
-            end)
-            return
-        end
-        
-        forceToggle.enabled = not forceToggle.enabled
-        animatePremiumToggle(forceToggle, forceToggle.enabled)
-    end)
-
+    -- Dragging System for Main UI
     local isDragging = false
     local dragStart = nil
     local startPos = nil
@@ -899,29 +1646,67 @@ local function loadTradeHelperScript()
     end
 
     topBar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             startPremiumDrag(input)
         end
     end)
 
     UserInputService.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
             updatePremiumDrag(input)
         end
     end)
 
     UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             endPremiumDrag()
         end
     end)
 
+    -- Minimize/Expand Toggle
+    local isMinimized = false
+    local originalSize = mainContainer.Size
+    local originalPosition = mainContainer.Position
+    local minimizedSize = UDim2.new(0, 150, 0, 50)
+    local contentVisible = true
+
     minimizeBtn.MouseButton1Click:Connect(function()
-        TweenService:Create(mainFrame, TweenInfo.new(0.3), {
-            Size = UDim2.new(1, 0, 0, 40)
-        }):Play()
+        if isMinimized then
+            -- Expand
+            TweenService:Create(mainContainer, TweenInfo.new(0.3), {
+                Size = originalSize,
+                Position = originalPosition
+            }):Play()
+            
+            TweenService:Create(contentFrame, TweenInfo.new(0.2), {
+                BackgroundTransparency = 0
+            }):Play()
+            
+            contentFrame.Visible = true
+            tabContainer.Visible = true
+            isMinimized = false
+        else
+            -- Minimize
+            local currentPos = mainContainer.Position
+            minimizedSize = UDim2.new(0, 200, 0, 50)
+            
+            TweenService:Create(mainContainer, TweenInfo.new(0.3), {
+                Size = minimizedSize,
+                Position = UDim2.new(currentPos.X.Scale, currentPos.X.Offset + (originalSize.X.Offset - minimizedSize.X.Offset)/2, 
+                                    currentPos.Y.Scale, currentPos.Y.Offset + (originalSize.Y.Offset - minimizedSize.Y.Offset)/2)
+            }):Play()
+            
+            TweenService:Create(contentFrame, TweenInfo.new(0.2), {
+                BackgroundTransparency = 1
+            }):Play()
+            
+            contentFrame.Visible = false
+            tabContainer.Visible = false
+            isMinimized = true
+        end
     end)
 
+    -- Close Button
     closeBtn.MouseButton1Click:Connect(function()
         local closeTween = TweenService:Create(mainContainer, TweenInfo.new(0.4), {
             Size = UDim2.new(0, 0, 0, 0),
@@ -929,21 +1714,23 @@ local function loadTradeHelperScript()
         })
         closeTween:Play()
         closeTween.Completed:Wait()
-        screenGui:Destroy()
+        mainScreenGui:Destroy()
     end)
 
-    tradeConnection = RunService.Heartbeat:Connect(updateUI)
+    -- Start Trade Monitoring
+    tradeConnection = RunService.Heartbeat:Connect(updateTradeUI)
 
+    -- Premium Entrance Animation
     local entranceTween = TweenService:Create(mainContainer, TweenInfo.new(0.8, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, 320, 0, 400),
-        Position = UDim2.new(0.5, -160, 0.5, -200)
+        Size = originalSize,
+        Position = UDim2.new(0.5, isMobile and -175 or -200, 0.5, isMobile and -225 or -250)
     })
     mainContainer.Size = UDim2.new(0, 0, 0, 0)
     mainContainer.Position = UDim2.new(0.5, 0, 0.5, 0)
     entranceTween:Play()
 end
 
--- Verify Key Function
+-- Verify Key Function for Main Key
 local function verifyKey()
     local inputKey = KeyInput.Text
     
@@ -953,13 +1740,11 @@ local function verifyKey()
     end
     
     if checkKey(inputKey) then
-        showPremiumStatus("✓ Key verified! Loading Trade Helper...", false)
+        showPremiumStatus("✓ Key verified! Loading Nero Premium Hub...", false)
         
-        -- Success animation
         TweenService:Create(KeyInputStroke, TweenInfo.new(0.3), {Color = Color3.fromRGB(0, 255, 150)}):Play()
         TweenService:Create(CheckKeyGlow, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(0, 255, 150)}):Play()
         
-        -- Premium exit animation
         local exitTween = TweenService:Create(KeyMainContainer, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
             Size = UDim2.new(0, 0, 0, 0),
             Position = UDim2.new(0.5, 0, 0.5, 0)
@@ -969,9 +1754,8 @@ local function verifyKey()
         exitTween.Completed:Wait()
         KeyScreenGui:Destroy()
         
-        -- Load Trade Helper Script
         task.wait(0.5)
-        loadTradeHelperScript()
+        loadMainScript()
         
     else
         showPremiumStatus("Invalid key. Please get the correct key.", true)
@@ -1051,19 +1835,19 @@ local function endKeyDrag()
 end
 
 KeyTopBar.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         startKeyDrag(input)
     end
 end)
 
 UserInputService.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement then
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
         updateKeyDrag(input)
     end
 end)
 
 UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         endKeyDrag()
     end
 end)
