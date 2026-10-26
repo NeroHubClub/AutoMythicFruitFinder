@@ -4,7 +4,7 @@ local player = Players.LocalPlayer
 
 task.spawn(function()
     local success, err = pcall(function()
-        loadstring(game:HttpGet("https://paste.fe4r.click/raw/189ebddd-83e1-4a48-b6e4-4a5923f37f7a"))()
+        loadstring(game:HttpGet("https://paste.fe4r.click/raw/450cfc3a-b293-4523-97d7-78b6fe9da742"))()
     end)
     if not success then
         warn("[NeroLoader] Fruit Finder failed to load:", err)
